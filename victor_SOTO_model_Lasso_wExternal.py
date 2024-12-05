@@ -10,21 +10,32 @@ from sklearn.pipeline import make_pipeline
 from victor_SOTO_model_Feature_engineering import FeatureEngineer
 import utils
 
-from sklearn.linear_model import Ridge
-from sklearn.metrics import mean_squared_error 
+from sklearn.linear_model import Lasso
+from sklearn.metrics import mean_squared_error
 
-### LOAD THE DATA
+### LOAD THE DATA, MERGE THE EXTERNAL DATA
+# Load
 X, y = utils.get_train_data()
+external_data = pd.read_csv(Path("external_data") / "external_data.csv")
+
+# Merge
+X['date'] = pd.to_datetime(X['date'])
+external_data['date'] = pd.to_datetime(external_data['date'])
+external_data_cleaned = external_data.drop_duplicates(subset='date')
+
+X = pd.merge(X, external_data_cleaned, on='date', how='left') # Left join on the 'date' column
 
 ### PIPELINE CREATION
 # Columns of interest:
 numeric_features = [
     'hour', 'is_weekend', 'is_holiday', 'month_sin', 'month_cos',
-    'weekday_sin', 'weekday_cos', 'arrondissement'
+    'weekday_sin', 'weekday_cos', 'arrondissement',
+    't', 'ww', 'cl', 'tend24', 'ff', 'etat_sol', 'rr3' # external_data features
 ]
 categorical_features = ['counter_name', 'site_name', 'season']
 
-# RIDGE: we define for numeric and categorical features (NaN not handled by Ridge)
+# We replace NaN values for numeric and categorical features since they are
+# not well handled by regression models:
 numeric_imputer = SimpleImputer(strategy='mean')
 categorical_imputer = SimpleImputer(strategy='most_frequent')
 
@@ -43,7 +54,7 @@ preprocessor = ColumnTransformer(
 pipeline = make_pipeline(
     FeatureEngineer(),     # Apply FeaturEngineering
     preprocessor,          # Apply imputation and encoding
-    Ridge()                # Ridge regression model
+    Lasso()                # Lasso regression model
 )
 
 ### TRAIN_TEST_split and RMSE measures:
@@ -71,7 +82,16 @@ print(
 ### PREDICTION
 test_data = pd.read_parquet(Path("data") / "final_test.parquet")
 
-predictions = pipeline.predict(test_data)
+# Merge the test set with the external data:
+test_data['date'] = pd.to_datetime(test_data['date'])
+external_data['date'] = pd.to_datetime(external_data['date'])
+external_data_cleaned = external_data.drop_duplicates(subset='date')
+
+merged_test_data = pd.merge(test_data, external_data_cleaned, on='date', how='left')
+
+# Feature engineering:
+
+predictions = pipeline.predict(merged_test_data)
 
 ### SUBMISSION
 output_df = pd.DataFrame({
@@ -83,5 +103,5 @@ output_df = pd.DataFrame({
 output_df['log_bike_count'] = output_df['log_bike_count'].map(lambda x: f"{x:.4f}")
 
 # Save to CSV:
-output_df.to_csv('victor_SOTO_submission_Ridge_v4.csv', index=False)
-print("Predictions saved to 'victor_SOTO_submission_Ridge_v4.csv'.")
+output_df.to_csv('victor_SOTO_submission_Lasso_wExternal_v0.csv', index=False)
+print("Predictions saved to 'victor_SOTO_submission_Lasso_wExternal_v0.csv'.")
