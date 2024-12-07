@@ -177,3 +177,11 @@ class FeatureEngineer:
         X = _encode_lat_lon(X)
         X = _delete_columns(X)
         return X
+    
+    def _encode_dates(self, X):
+        X = _encode_dates(X)
+        return X
+    
+    def _encode_lat_lon(self, X):
+        X = _encode_lat_lon(X)
+        return X
