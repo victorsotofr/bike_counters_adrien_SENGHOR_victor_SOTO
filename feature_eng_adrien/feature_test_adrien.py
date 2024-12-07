@@ -27,6 +27,6 @@ class FeatureEngineerTest:
 
     def transform(self, X):
         X = feature_engineer._encode_dates(X)
-        X = feature_engineer._encode_lat_lon(X)
+        #X = feature_engineer._encode_lat_lon(X)
         X = _delete_columns_test(X)
         return X
