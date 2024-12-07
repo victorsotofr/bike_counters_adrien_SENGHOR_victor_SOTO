@@ -63,7 +63,7 @@ def _encode_dates(X):
     ]
     X["is_holiday"] = X["date"].isin(french_holidays).astype(int)
 
-    # Seasons
+    # We get the seasons from Date:
     def get_season(date):
         if date.month in [12, 1, 2]:  # Winter
             return 'Winter'
