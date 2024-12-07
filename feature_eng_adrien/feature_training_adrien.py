@@ -73,15 +73,19 @@ def _encode_dates(X):
     # Seasons
     def get_season(date):
         if date.month in [12, 1, 2]:  # Winter
-            return 'Winter'
+            return 0
         elif date.month in [3, 4, 5]:  # Spring
-            return 'Spring'
+            return 2
         elif date.month in [6, 7, 8]:  # Summer
-            return 'Summer'
+            return 3
         else:  # Autumn
-            return 'Autumn'
+            return 1
+    
+    
 
     X["season"] = X["date"].apply(get_season)
+    X["season_sin"] = np.sin(X["season"])
+    X["season_cos"] = np.cos(X["season"])
 
     # Cyclical encoding for months
     X["month_sin"] = np.sin(2 * np.pi * X["month"] / 12)
@@ -174,7 +178,7 @@ class FeatureEngineer:
 
     def transform(self, X):
         X = _encode_dates(X)
-        X = _encode_lat_lon(X)
+        #X = _encode_lat_lon(X)
         X = _delete_columns(X)
         return X
     
