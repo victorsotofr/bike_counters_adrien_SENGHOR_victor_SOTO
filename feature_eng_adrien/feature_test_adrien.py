@@ -1,32 +1,21 @@
-
-from feature_eng_adrien import feature_training_adrien
+from pathlib import Path
 import pandas as pd
+import numpy as np
 
-feature_engineer = feature_training_adrien.FeatureEngineer()
+# Pour merge mes deux datasets en ajoutant certains features préselectionnés de l'external data
+def merge_external_data(X, df_ext, col_ext):
+    df_ext = df_ext.copy()
+    X = X.copy()
 
-# same as training but without the 'bike count' column
-def _delete_columns_test(X):
-    X = X.copy()  # modify a copy of X
-    col_delete = [
-        "counter_id",  # I only keep the site_id
-        "counter_name",  # same
-        "site_name",  # same
-        "counter_technical_id",  # same
-        "coordinates",  # I prefer to get latitude and longitude
-        "counter_installation_date",
-    ]  # for my example I remove it because can't fit the model with that but still a data to use
-    X = X.drop(columns=col_delete)
+    # Conciliate date type
+    df_ext["date"] = pd.to_datetime(df_ext["date"]).astype("datetime64[us]")
+
+    # When using merge_asof left frame need to be sorted
+    X["orig_index"] = np.arange(X.shape[0])
+    X = pd.merge_asof(
+        X.sort_values("date"), df_ext[col_ext].sort_values("date"), on="date"
+    )
+    # Sort back to the original order
+    X = X.sort_values("orig_index")
+    del X["orig_index"]
     return X
-
-class FeatureEngineerTest:
-    """
-    A combined feature engineering class to apply _encode_dates and _encode_lat_lon
-    """
-    def fit(self, X, y=None):
-        return self
-
-    def transform(self, X):
-        X = feature_engineer._encode_dates(X)
-        #X = feature_engineer._encode_lat_lon(X)
-        X = _delete_columns_test(X)
-        return X
