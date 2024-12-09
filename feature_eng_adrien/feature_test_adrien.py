@@ -86,8 +86,23 @@ def _encode_dates(X):
     ]
     X["is_holiday"] = X["date"].isin(french_holidays).astype(int)
 
-    # Let's set a dateindex
-    #X = X.set_index(X["date"])
+    # Covid
+    # Périodes de confinement à Paris (2020-2021)
+    covid_periods = [
+        (datetime(2020, 3, 17), datetime(2020, 5, 11)),  # Premier confinement
+        (datetime(2020, 10, 30), datetime(2020, 12, 15)),  # Deuxième confinement
+        (datetime(2021, 4, 3), datetime(2021, 5, 3)),  # Troisième confinement
+    ]
+    def is_covid_period(date):
+        for start, end in covid_periods:
+            if start <= date <= end:
+                return 1
+        return 0
+    X["is_covid"] = X["date"].apply(is_covid_period)
+
+    # Cyclical encoding for months
+    X["month_sin"] = np.sin(2 * np.pi * X["month"] / 12)
+    X["month_cos"] = np.cos(2 * np.pi * X["month"] / 12)
 
     # Seasons
     def get_season(date):
