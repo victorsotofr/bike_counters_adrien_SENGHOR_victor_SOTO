@@ -52,6 +52,9 @@ def _encode_dates(X):
     X["month"] = X["date"].dt.month
     X["weekday"] = X["date"].dt.weekday
     X["hour"] = X["date"].dt.hour
+    
+    # separate night from day
+    X["is_night"] = ((X["hour"] <= 5) | (X["hour"] >= 22)).astype(int)
 
     # Identify weekends
     X["is_weekend"] = X["weekday"].isin([5, 6]).astype(int)
