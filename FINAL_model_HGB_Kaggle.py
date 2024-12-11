@@ -8,8 +8,6 @@ from sklearn.preprocessing import StandardScaler
 
 from sklearn.pipeline import make_pipeline
 from sklearn.ensemble import HistGradientBoostingRegressor
-from sklearn.metrics import mean_squared_error
-
 
 # DATA IMPORT
 # ==============================================================================
@@ -68,44 +66,20 @@ model = make_pipeline(
 
 # MODEL FITTING
 # ==============================================================================
-def train_test_split_temporal(X, y, delta_threshold="30 days"):
-    
-    cutoff_date = X["date"].max() - pd.Timedelta(delta_threshold)
-    mask = (X["date"] <= cutoff_date)
-    X_train, X_valid = X.loc[mask], X.loc[~mask]
-    y_train, y_valid = y[mask], y[~mask]
-
-    return X_train, y_train, X_valid, y_valid
-
-X_train, y_train, X_valid, y_valid = train_test_split_temporal(X, y)
-
-model.fit(X_train, y_train)
-
-# MODEL ERROR
-# ==============================================================================
-y_train_pred = model.predict(X_train)
-y_valid_pred = model.predict(X_valid)
-
-# Calculate and print RMSE for train and validation sets
-print(f"Train set, RMSE={mean_squared_error(y_train, y_train_pred, squared=False):.2f}")
-print(f"Validation set, RMSE={mean_squared_error(y_valid, y_valid_pred, squared=False):.2f}")
+model.fit(X, y)
 
 # MODEL PREDICT
 # ==============================================================================
-test_set = pd.read_parquet("./data/final_test.parquet")
+test_set = pd.read_parquet("../msdb-2024/final_test.parquet")
 
-predictions = model.predict(test_set)
+y_pred = model.predict(test_set)
 
 # SUBMISSION
 # ==============================================================================
-output_df = pd.DataFrame({
-    'Id': test_set.index,
-    'log_bike_count': predictions
-})
-
-# Format log_bike_count:
-output_df['log_bike_count'] = output_df['log_bike_count'].map(lambda x: f"{x:.4f}")
-
-# Save to CSV:
-output_df.to_csv('FINAL_predictions_HGB.csv', index=False)
-print("Predictions saved to 'FINAL_predictions_HGB.csv'.")
+results = pd.DataFrame(
+    dict(
+        Id=np.arange(y_pred.shape[0]),
+        log_bike_count=y_pred,
+    )
+)
+results.to_csv("submission.csv", index=False)
