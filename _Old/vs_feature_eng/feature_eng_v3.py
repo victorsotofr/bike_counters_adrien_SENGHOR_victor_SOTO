@@ -12,22 +12,16 @@ def _merge_external_data(X):
     external_data = pd.read_csv("./external_data/external_data.csv").copy()
 
     columns_of_interest = [
-        "date", 
-        "t", # temperature, obvious factor
-        "cl", # cloud covering
-        "tend24", #weather tendency on 24h
-        "etat_sol", # state of the floor
-        "rr3", # rain during the last 3 hours
-        "w1",
-        "nbas",
-        "nnuage1",
-        "w2",
-        "n",
-        "raf10",
-        "ht_neige",
-        "ssfrai",
-        "rr12",
-        "rr24"
+        'date', 
+        't', # temperature
+        'raf10', # rafales sur les 10 dernières minutes
+        'etat_sol', # etat du sol
+        'nnuage1', # nébulosité couche de nuage 1
+        'rr12', # précipitations dans les 12 dernières heures
+        'rr24',
+        'cl', # type des nuages de l'étage inférieur
+        'ssfrai', # hauteur de la neige fraîche
+        'w2' # temps passé 2
         ]
     
     # Conciliate date type
